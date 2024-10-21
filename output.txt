@@ -1,0 +1,16 @@
+Linux c175c0088dca 5.15.153.1-microsoft-standard-WSL2 #1 SMP Fri Mar 29 23:14:13 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+
+               total        used        free      shared  buff/cache   available
+Mem:            7903        1114        6346           4         441        6551
+Swap:           2048           0        2048
+
+total 44
+drwxrwxrwx 1 root   root    4096 Oct 21 21:43 ./
+drwxr-xr-x 3 root   root    4096 Oct 21 19:13 ../
+-rwxrwxrwx 1 root   root    2588 Oct 21 19:44 collatz_sequence.c*
+drwxrwxrwx 1 root   root    4096 Oct 21 18:57 .devcontainer/
+-rwxrwxrwx 1 root   
+vscode
+
+/workspaces/Assignment2
+

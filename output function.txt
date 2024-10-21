@@ -1,0 +1,10 @@
+void writeOuput(char* command, char* output)
+{
+        /* Complete code to save the commands in a output.txt*/
+  
+	fprintf(fp, "The output of: %s : is\n", command);
+	fprintf(fp, ">>>>>>>>>>>>>>>\n%s<<<<<<<<<<<<<<<\n", output);	
+        
+	/* Your code here*/
+
+}

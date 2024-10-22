@@ -31,8 +31,10 @@ int main() {
         perror("shm_open");
         exit(EXIT_FAILURE);
     }
-
-    ftruncate(shm_fd, SHM_SIZE);
+    if (ftruncate(shm_fd, SHM_SIZE) == -1) {
+        perror("ftruncate");
+        exit(EXIT_FAILURE);
+    }
     char *shm_ptr = mmap(0, SHM_SIZE, PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (shm_ptr == MAP_FAILED) {
         perror("mmap");

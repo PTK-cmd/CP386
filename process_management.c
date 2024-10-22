@@ -1,123 +1,125 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <fcntl.h>
-#include <sys/mman.h>
 
-#define BUFSIZE 4096
-#define SHMSIZE 1024
-#define MAX_LINE_LENGTH 256
+#define SHM_SIZE 1024  // Shared memory size
+#define CMD_SIZE 256   // Command size
 
-// utility to print the output
-void writeOutput(char *command, char *output)
-{
-    FILE *fp;
-    fp = fopen("output.txt", "a");
-
-    fprintf(fp, "The output of: %s : is\n", command);
-    fprintf(fp, ">>>>>>>>>>>>>>>\n%s<<<<<<<<<<<<<<<\n", output);
-
-    fclose(fp);
+// Function to write output to a file
+void write_output(const char *output) {
+    FILE *file = fopen("output.txt", "a");
+    if (file) {
+        fprintf(file, "%s\n", output);
+        fclose(file);
+    } else {
+        perror("Failed to open output file");
+    }
 }
 
-int main()
-{
-    int shmid;
-    char *shm;
-    // Open shared memory
-    if ((shmid = shm_open("/my_shm", O_CREAT | O_RDWR, 0666)) == -1)
-    {
-        perror("shm_open");
-        exit(1);
-    }
-    // Map shared memory
-    if ((shm = mmap(NULL, SHMSIZE, PROT_WRITE | PROT_READ, MAP_SHARED, shmid, 0)) == MAP_FAILED)
-    {
-        perror("mmap");
-        exit(1);
-    }
-    // Truncate shared memory
-    if (ftruncate(shmid, SHMSIZE) == -1)
-    {
-        perror("ftruncate");
-        exit(1);
-    }
-    pid_t pid;
-    int pipefd[2];
-
-    // Create a pipe
-    if (pipe(pipefd) == -1)
-    {
-        perror("pipe");
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Please provide an input file name\n");
         exit(1);
     }
 
-    // Create first child process
-    pid = fork();
-    if (pid == 0)
-    {
-        // this is Child process retrieving input
-        char buf[BUFSIZE];
-        int len = 0;
-        int fd = open("sample_in_process.txt", O_RDONLY);
-        if (fd == -1)
-        {
-            perror("open");
+    const char *input_file = argv[1];
+    // Create shared memory
+    int shmid = shmget(IPC_PRIVATE, SHM_SIZE, IPC_CREAT | 0666);
+    if (shmid < 0) {
+        perror("Failed to create shared memory");
+        exit(1);
+    }
+
+    // Attach shared memory
+    char *shm_ptr = (char *)shmat(shmid, NULL, 0);
+    if (shm_ptr == (char *)-1) {
+        perror("Failed to attach shared memory");
+        exit(1);
+    }
+
+    // Create a child process
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("Failed to fork child process");
+        exit(1);
+    }
+
+    if (pid == 0) { // Child process reads file content
+        FILE *file = fopen(input_file, "r");
+        if (!file) {
+            perror("Failed to open input file");
             exit(1);
         }
 
-        while ((len = read(fd, buf, BUFSIZE)) > 0)
-        {
-            strncpy(shm, buf, len);
-            shm[len] = '\0';
+        size_t index = 0;
+        char command[CMD_SIZE];
+        // Read the file line by line and copy to shared memory
+        while (fgets(command, sizeof(command), file)) {
+            strcpy(&shm_ptr[index], command);
+            index += strlen(command);
         }
-        close(fd);
-        exit(0);
-    }
-    else if (pid > 0)
-    {
-        // Parent process
-        wait(NULL);
-        pid_t pid2;
 
-        // create second child process
-        pid2 = fork();
-        if (pid2 == 0)
-        {
-            // Child process
-            int fd = open("sample_in_process.txt", O_RDONLY);
-            if (fd == -1)
-            {
-                perror("open");
+        fclose(file);
+        exit(0);
+    } else { // Parent process
+        wait(NULL); // Wait for the child process to finish
+
+        char *commands = shm_ptr;
+        char *command_line = strtok(commands, "\n");
+
+        while (command_line != NULL) {
+            int fd[2];
+            pipe(fd);
+            pid_t child_pid = fork();
+
+            if (child_pid < 0) {
+                perror("Failed to fork child process");
                 exit(1);
             }
-            dup2(pipefd[1], STDOUT_FILENO);
-            close(pipefd[0]);
-            close(pipefd[1]);
 
-            // Executing shell commands
-            char *args[] = {"sh", "-c", shm, NULL};
-            execvp(args[0], args);
-            exit(0);
-        }
-        else if (pid2 > 0)
-        {
-            // Parent process
-            wait(NULL);
+            if (child_pid == 0) { // Child process executes command
+                dup2(fd[1], STDOUT_FILENO); // Redirect output to pipe
+                close(fd[0]);
+                close(fd[1]);
 
-            // write to output file
-            close(pipefd[1]);
-            char buf[BUFSIZE];
-            int len = 0;
-            while ((len = read(pipefd[0], buf, BUFSIZE)) > 0)
-            {
-                writeOutput(shm, buf);
+                char *args[CMD_SIZE];
+                args[0] = strtok(command_line, " ");
+                int i = 1;
+
+                // Tokenize the command line arguments
+                while ((args[i] = strtok(NULL, " ")) != NULL) {
+                    i++;
+                }
+                
+                execvp(args[0], args); // Execute the command
+                perror("exec failed");
+                exit(1);
+            } else { // Parent process reads output and writes to file
+                close(fd[1]); // Parent closes the write end of the pipe
+
+                char output[CMD_SIZE];
+                ssize_t bytes_read = read(fd[0], output, sizeof(output) - 1);
+                if (bytes_read > 0) {
+                    output[bytes_read] = '\0'; // Null-terminate output
+                    write_output(output);
+                }
+
+                close(fd[0]);
+                wait(NULL); // Wait for the child process to finish
             }
+
+            command_line = strtok(NULL, "\n"); // Get the next command line
         }
+
+        shmdt(shm_ptr); // Detach shared memory
+        shmctl(shmid, IPC_RMID, NULL); // Remove shared memory
     }
+    
     return 0;
 }

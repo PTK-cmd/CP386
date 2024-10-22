@@ -6,6 +6,10 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
+#define SHM_NAME "/shm_commands"
+#define SHM_SIZE 4096
+
+
 // Function to generate the Collatz sequence
 void generate_collatz_sequence(int n, int* sequence, int* len) {
     int i = 0;
@@ -22,6 +26,19 @@ void generate_collatz_sequence(int n, int* sequence, int* len) {
 }
 
 int main() {
+    int shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("shm_open");
+        exit(EXIT_FAILURE);
+    }
+
+    ftruncate(shm_fd, SHM_SIZE);
+    char *shm_ptr = mmap(0, SHM_SIZE, PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (shm_ptr == MAP_FAILED) {
+        perror("mmap");
+        exit(EXIT_FAILURE);
+    }
+    
     // Open the file containing the start numbers
     FILE* file = fopen("start_numbers.txt", "r");
     if (file == NULL) {

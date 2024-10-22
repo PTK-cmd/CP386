@@ -64,7 +64,7 @@ int main() {
 
         if (pid == 0) { // Child process
             // Output the contents of the shared memory object
-            printf("Child Process: The generated Collatz sequence is ");
+            printf("Child Process: The generated collatz sequence is ");
             for (int i = 0; i < sequence_len; i++) {
                 printf("%d ", shm_ptr[i]);
             }

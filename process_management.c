@@ -9,14 +9,14 @@
 #define SHM_NAME "/shm_commands"
 #define SHM_SIZE 4096
 
-void write_output(const char *filename, const char *output) {
-    FILE *file = fopen(filename, "a");
-    if (file == NULL) {
-        perror("fopen");
-        exit(EXIT_FAILURE);
-    }
-    fprintf(file, "%s\n", output);
-    fclose(file);
+
+void write_output(char *command, char *output) {
+    
+    FILE *fp;
+	fp = fopen("output.txt","a");
+    fprintf(fp, "The output of: %s : is\n", command);
+    fprintf(fp, ">>>>>>>>>>>>>>>\n%s<<<<<<<<<<<<<<<\n", output);
+    fclose(fp);
 }
 
 int main(int argc, char *argv[]) {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
                 char buffer[1024];
                 read(pipe_fd[0], buffer, sizeof(buffer));
                 close(pipe_fd[0]);
-                write_output("output.txt", buffer);
+                write_output(command, buffer);
             }
             command = strtok(NULL, "\n");
         }

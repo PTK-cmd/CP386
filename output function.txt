@@ -1,17 +1,10 @@
 #include <stdio.h>
 
 void writeOutput(char* command, char* output) {
-    // Open the file in append mode ("a") to add output at the end of the file
-    FILE *fp = fopen("output.txt", "a");
-    if (fp == NULL) {
-        perror("Error opening output.txt");
-        return;
-    }
-
-    // Write the command and its output to the file
+    
+    FILE *fp;
+	fp =fopen("output.txt","a")
     fprintf(fp, "The output of: %s : is\n", command);
     fprintf(fp, ">>>>>>>>>>>>>>>\n%s<<<<<<<<<<<<<<<\n", output);
-    
-    // Close the file to avoid memory/resource leaks
     fclose(fp);
 }

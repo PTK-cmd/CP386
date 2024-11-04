@@ -1,5 +1,0 @@
-uname -a
-free -m
-ls -l -a -F
-whoami
-pwd

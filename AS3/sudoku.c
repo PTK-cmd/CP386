@@ -4,10 +4,10 @@
 
 #define SIZE 9
 
-// Sudoku puzzle solution
+
 int sudoku[SIZE][SIZE];
 
-// Thread function to check that each column contains the digits 1 through 9
+
 void *check_column(void *arg)
 {
     int col = *(int *)arg;
@@ -24,7 +24,7 @@ void *check_column(void *arg)
     pthread_exit((void *)1);
 }
 
-// Thread function to check that each row contains the digits 1 through 9
+
 void *check_row(void *arg)
 {
     int row = *(int *)arg;
@@ -41,7 +41,7 @@ void *check_row(void *arg)
     pthread_exit((void *)1);
 }
 
-// Thread function to check that each 3x3 sub-grid contains the digits 1 to 9
+
 void *check_subgrid(void *arg)
 {
     int subgrid = *(int *)arg;
@@ -65,7 +65,7 @@ void *check_subgrid(void *arg)
 
 int main()
 {
-    // Read Sudoku puzzle solution from file given
+   
     FILE *f = fopen("sample_in_sudoku.txt", "r");
     for (int i = 0; i < SIZE; i++)
     {
@@ -76,7 +76,7 @@ int main()
     }
     fclose(f);
 
-    // Create threads to check each column in Sudoku
+    
     pthread_t column_threads[SIZE];
     int column_args[SIZE];
     for (int i = 0; i < SIZE; i++)
@@ -85,7 +85,7 @@ int main()
         pthread_create(&column_threads[i], NULL, check_column, &column_args[i]);
     }
 
-    // Create threads to check each row in Sudoku
+    
     pthread_t row_threads[SIZE];
     int row_args[SIZE];
     for (int i = 0; i < SIZE; i++)
@@ -94,7 +94,7 @@ int main()
         pthread_create(&row_threads[i], NULL, check_row, &row_args[i]);
     }
 
-    // Create threads to check each sub-grid in Sudoku
+    
     pthread_t subgrid_threads[SIZE];
     int subgrid_args[SIZE];
     for (int i = 0; i < SIZE; i++)
@@ -103,7 +103,7 @@ int main()
         pthread_create(&subgrid_threads[i], NULL, check_subgrid, &subgrid_args[i]);
     }
 
-    // Wait for all threads to finish
+    
     int column_results[SIZE];
     int row_results[SIZE];
     int subgrid_results[SIZE];
@@ -114,7 +114,7 @@ int main()
         pthread_join(subgrid_threads[i], (void **)&subgrid_results[i]);
     }
 
-    // Check if Sudoku puzzle solution is valid
+    
     int valid = 1;
     for (int i = 0; i < SIZE; i++)
     {
@@ -125,7 +125,7 @@ int main()
         }
     }
 
-    // Output sudoku and validate it
+    
     printf("Sudoku Puzzle Solution is:\n");
     for (int i = 0; i < SIZE; i++)
     {

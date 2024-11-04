@@ -1,7 +1,7 @@
 #include <stdio.h>
 #define MAX_THREADS 50
 
-// define a struct to represent a thread
+
 typedef struct
 {
     int id;
@@ -18,7 +18,7 @@ int main()
         printf("Error opening file!\n");
         return 1;
     }
-    // read the threads into an array of structs
+    
     Thread threads[MAX_THREADS];
     int num_threads = 0;
     while (fscanf(fp, "%d,%d,%d", &threads[num_threads].id, &threads[num_threads].arrival_time, &threads[num_threads].burst_time) == 3)
@@ -27,7 +27,7 @@ int main()
     }
     fclose(fp);
 
-    // calculate completion time, turn-around time, and waiting time for each thread
+    
     int completion_time = 0;
     int total_turnaround_time = 0;
     int total_waiting_time = 0;

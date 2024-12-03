@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_MEMORY 1048576 // 默认内存大小 1 MB
+#define MAX_MEMORY 1048576 // Default memory size: 1 MB
 
 typedef struct Block {
-    int start;           // 起始地址
-    int size;            // 内存块大小
-    int is_free;         // 是否空闲，1 表示空闲，0 表示已分配
-    char process[10];    // 进程名
-    struct Block *next;  // 下一个内存块
+    int start;           // Start address of the block
+    int size;            // Size of the memory block
+    int is_free;         // 1 if free, 0 if allocated
+    char process[10];    // Process name
+    struct Block *next;  // Pointer to the next block
 } Block;
 
 Block *head = NULL;
 
-// 初始化内存
+// Initialize memory
 void init_memory(int max_memory) {
     head = (Block *)malloc(sizeof(Block));
     head->start = 0;
@@ -25,7 +25,7 @@ void init_memory(int max_memory) {
     printf("Here, the Best Fit approach has been implemented and the allocated %d bytes of memory.\n", max_memory);
 }
 
-// 打印内存状态
+// Print memory status
 void print_status() {
     Block *current = head;
     int allocated_memory = 0, free_memory = 0;
@@ -66,7 +66,7 @@ void print_status() {
     }
 }
 
-// 分配内存
+// Allocate memory
 void allocate_memory(char *process, int size, char strategy) {
     Block *current = head, *best_fit = NULL;
     int best_size = MAX_MEMORY + 1;
@@ -110,7 +110,7 @@ void allocate_memory(char *process, int size, char strategy) {
     }
 }
 
-// 释放内存
+// Release memory
 void release_memory(char *process) {
     Block *current = head;
 
@@ -120,7 +120,7 @@ void release_memory(char *process) {
             strcpy(current->process, "");
             printf("Successfully released memory for process %s\n", process);
 
-            // 合并下一个空闲块
+            // Merge with the next free block if possible
             if (current->next && current->next->is_free) {
                 Block *temp = current->next;
                 current->size += temp->size;
@@ -128,7 +128,7 @@ void release_memory(char *process) {
                 free(temp);
             }
 
-            // 合并上一个空闲块
+            // Merge with the previous free block if possible
             Block *prev = head;
             while (prev && prev->next != current) {
                 prev = prev->next;
@@ -146,7 +146,7 @@ void release_memory(char *process) {
     printf("No memory allocated to process %s\n", process);
 }
 
-// 内存压缩
+// Compact memory
 void compact_memory() {
     Block *current = head, *prev_free = NULL;
     int new_start = 0;
@@ -171,7 +171,7 @@ void compact_memory() {
     printf("Compaction process is successful\n");
 }
 
-// 主程序
+// Main program
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Usage: ./allocation <memory_size>\n");
